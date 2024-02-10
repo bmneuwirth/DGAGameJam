@@ -1,18 +1,26 @@
+using JetBrains.Annotations;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class PhotoScript : MonoBehaviour
 {
-    public RenderTexture renderTexture;
-    public Material captureMaterial; 
+    public const int MAX_PHOTOS = 20;
+
+    public Material captureMaterial;
+    public List<RenderTexture> photos;
+
+    public int curPhotoIndex = 0;
 
     // Start is called before the first frame update
     void Start()
     {
-        if (renderTexture)
+        photos = new List<RenderTexture>();
+        for (int i = 0; i < MAX_PHOTOS; i++)
         {
-            renderTexture.Create();
+            RenderTexture rt = new RenderTexture(512, 512, 16, RenderTextureFormat.ARGB32);
+            rt.Create();
+            photos.Add(rt);
         }
     }
 
@@ -22,14 +30,17 @@ public class PhotoScript : MonoBehaviour
         if (Input.GetMouseButtonDown(0))
         {
             Debug.Log("Left click pressed");
-            if (renderTexture && renderTexture.IsCreated())
+            RenderTexture curPhoto = photos[curPhotoIndex];
+            if (curPhoto && curPhoto.IsCreated())
             {
                 Camera camera = Camera.main;
                 RenderTexture prevTarget = camera.targetTexture;
-                camera.targetTexture = renderTexture;
+                camera.targetTexture = curPhoto;
                 camera.Render();
-                captureMaterial.mainTexture = renderTexture;
+                captureMaterial.mainTexture = curPhoto;
                 camera.targetTexture = prevTarget;
+                curPhotoIndex += 1;
+                curPhotoIndex %= MAX_PHOTOS; // Loop through
             }
             else
             {
@@ -39,10 +50,13 @@ public class PhotoScript : MonoBehaviour
     }
     private void OnDestroy()
     {
-        if (renderTexture && renderTexture.IsCreated())
+        for (int i = 0; i < MAX_PHOTOS; i++)
         {
-            renderTexture.Release();
+            RenderTexture rt = new RenderTexture(512, 512, 16, RenderTextureFormat.ARGB32);
+            if (rt && rt.IsCreated())
+            {
+                rt.Release();
+            }
         }
-
     }
 }
