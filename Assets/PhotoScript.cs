@@ -112,16 +112,6 @@ public class PhotoScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // Very basic camera movement for debugging
-        if (DEBUG_MODE)
-        {
-            float xAxisValue = Input.GetAxis("Horizontal");
-            float zAxisValue = Input.GetAxis("Vertical");
-            if (Camera.main != null)
-            {
-                Camera.main.transform.Translate(new Vector3(xAxisValue * DEBUG_SPEED * Time.deltaTime, 0.0f, zAxisValue * DEBUG_SPEED * Time.deltaTime));
-            }
-        }
         if (Input.GetMouseButtonDown(1))
         {
             inCameraMode = !inCameraMode;
