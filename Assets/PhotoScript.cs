@@ -1,7 +1,20 @@
 using JetBrains.Annotations;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using UnityEngine;
+
+public class Photo
+{
+    public Photo(RenderTexture texture)
+    {
+        this.texture = texture;
+    }
+
+    public RenderTexture texture { get; }
+
+    // Eventually add flags for what photos contain
+}
 
 public class PhotoScript : MonoBehaviour
 {
@@ -11,25 +24,33 @@ public class PhotoScript : MonoBehaviour
     public Vector3 DEBUG_CENTER;
 
     public GameObject planePrefab;
-    public List<RenderTexture> photos;
-    public List<GameObject> photosPlanes;
+    private GameObject[] photosPlanes;
 
-    public int curPhotoIndex = 0;
+    // Active photos are a list we can remove things from
+    public List<Photo> activePhotos;
+
+    // Inactive photos are a stack we can pull from and add to the list
+    private Stack<Photo> inactivePhotos;
 
     // Start is called before the first frame update
     void Start()
     {
-        photos = new List<RenderTexture>();
+        activePhotos = new List<Photo>();
+        inactivePhotos = new Stack<Photo>();
+        photosPlanes = new GameObject[MAX_PHOTOS];
+
+
         for (int i = 0; i < MAX_PHOTOS; i++)
         {
             RenderTexture rt = new RenderTexture(512, 512, 16, RenderTextureFormat.ARGB32);
             rt.Create();
-            photos.Add(rt);
+            Photo photo = new Photo(rt);
+            inactivePhotos.Push(photo);
 
             Vector3 planePos = DEBUG_CENTER;
             planePos.x = (i - (MAX_PHOTOS / 2)) * 2;
             GameObject photoPlane = Instantiate(planePrefab, planePos, Quaternion.Euler(90, -90, 90));
-            photosPlanes.Add(photoPlane);
+            photosPlanes[i] = photoPlane;
 
             Material planeMaterial = new Material(Shader.Find("Standard"));
             photoPlane.GetComponent<MeshRenderer>().material = planeMaterial;
@@ -51,26 +72,48 @@ public class PhotoScript : MonoBehaviour
         }
         if (Input.GetMouseButtonDown(0))
         {
-            Debug.Log("Left click pressed");
-            RenderTexture curPhoto = photos[curPhotoIndex];
-            if (curPhoto && curPhoto.IsCreated())
+            if (inactivePhotos.Count == 0)
             {
-                GameObject curPlane = photosPlanes[curPhotoIndex];
-
-                Camera camera = Camera.main;
-                RenderTexture prevTarget = camera.targetTexture;
-                camera.targetTexture = curPhoto;
-                camera.Render();
-
-                Material captureMat = curPlane.GetComponent<MeshRenderer>().material;
-                captureMat.mainTexture = curPhoto;
-                camera.targetTexture = prevTarget;
-                curPhotoIndex += 1;
-                curPhotoIndex %= MAX_PHOTOS; // Loop through
+                Debug.Log("Out of photos! Delete some");
             }
             else
             {
-                Debug.Log("Writing to render texture failed.");
+                Photo curPhoto = inactivePhotos.Pop();
+                if (curPhoto.texture && curPhoto.texture.IsCreated())
+                {
+
+                    Camera camera = Camera.main;
+                    RenderTexture prevTarget = camera.targetTexture;
+                    camera.targetTexture = curPhoto.texture;
+                    camera.Render();
+                    camera.targetTexture = prevTarget;
+
+                    activePhotos.Add(curPhoto);
+                }
+                else
+                {
+                    Debug.Log("Writing to render texture failed.");
+                }
+
+            }
+        }
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            DeletePhoto(0);
+        }
+
+        // Update the photos (this only needs to happen if they are being displayed)
+        for (int i = 0; i < MAX_PHOTOS; i++)
+        {
+            GameObject curPlane = photosPlanes[i];
+            Material mat = curPlane.GetComponent<MeshRenderer>().material;
+            if (activePhotos.Count > i)
+            {
+                mat.mainTexture = activePhotos[i].texture;
+            }
+            else
+            {
+                mat.mainTexture = null;
             }
         }
     }
@@ -83,6 +126,17 @@ public class PhotoScript : MonoBehaviour
             {
                 rt.Release();
             }
+        }
+    }
+
+    /** Delete the ith photo (0-indexed) */
+    public void DeletePhoto(int i)
+    {
+        if (activePhotos.Count > i)
+        {
+            Photo photoToDelete = activePhotos[i];
+            activePhotos.RemoveAt(i);
+            inactivePhotos.Push(photoToDelete);
         }
     }
 }
