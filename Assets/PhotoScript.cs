@@ -5,17 +5,24 @@ using System.ComponentModel;
 using UnityEngine;
 using static UnityEditor.Experimental.GraphView.GraphView;
 
+public enum ObjectType
+{
+    NOTHING,
+    GREEN,
+    BLUE
+}
+
 public class Photo
 {
     public Photo(RenderTexture texture)
     {
         this.texture = texture;
-        this.isRedCubeIn = false;
+        this.obInPhoto = ObjectType.NOTHING;
     }
 
     public RenderTexture texture { get; }
 
-    public bool isRedCubeIn { get; set; }
+    public ObjectType obInPhoto { get; set; }
 
     // Eventually add flags for what photos contain
 }
@@ -28,6 +35,9 @@ public class PhotoScript : MonoBehaviour
     public Vector3 DEBUG_CENTER;
     // How much of the area the object has to be of the photo to be a "good shot"
     public const float REQ_AREA = 0.02f;
+
+    // Objects that are special and can be in photo
+    public List<GameObject> targetObjects;
 
     public GameObject planePrefab;
     private GameObject[] photosPlanes;
@@ -53,12 +63,13 @@ public class PhotoScript : MonoBehaviour
     // All the fields below are for debugging
     private GameObject[] debugPlanes;
     public Material greenMat;
+    public Material blueMat;
     public Material redMat;
 
     // Start is called before the first frame update
     void Start()
     {
-        layerMask = 0 | (1 << LayerMask.NameToLayer("RedCube"));
+        layerMask = 0 | (1 << LayerMask.NameToLayer("SpecialObject"));
         Debug.Log(layerMask);
         Camera.main.backgroundColor = Color.black;
 
@@ -155,7 +166,33 @@ public class PhotoScript : MonoBehaviour
                     }
 
                     // Check against threshold
-                    curPhoto.isRedCubeIn = (nonBlackPixels > REQ_AREA * blitTexture.width * blitTexture.height);
+                    if (nonBlackPixels > REQ_AREA * blitTexture.width * blitTexture.height)
+                    {
+                        // See which object it is
+                        float minDist = float.MaxValue;
+                        ObjectType bestObType = ObjectType.NOTHING;
+
+                        for (int i = 0; i < targetObjects.Count; i++)
+                        {
+                            Vector3 viewPos = camera.WorldToViewportPoint(targetObjects[i].transform.position);
+                            
+                            // Check if closest object and in viewport
+                            if (viewPos.z > 0 && viewPos.z < minDist && viewPos.x > 0 && viewPos.x < 1 && viewPos.y > 0 && viewPos.y < 1)
+                            {
+                                // Check if it's the thing we have in the photo (not occluded or something)
+                                int pixelX = (int)(viewPos.x * blitTexture2D.width);
+                                int pixelY = (int)(viewPos.y * blitTexture2D.height);
+
+                                if (blitTexture2D.GetPixel(pixelX, pixelY) != Color.black)
+                                {
+                                    bestObType = targetObjects[i].GetComponent<SpecialObject>().obType;
+                                    minDist = viewPos.z;
+                                }
+                            }
+
+                        }
+                        curPhoto.obInPhoto = bestObType;
+                    }
 
                     // Cleanup
                     RenderTexture.active = null; // Reset active RenderTexture
@@ -182,9 +219,13 @@ public class PhotoScript : MonoBehaviour
             if (activePhotos.Count > i)
             {
                 mat.mainTexture = activePhotos[i].texture;
-                if (activePhotos[i].isRedCubeIn)
+                if (activePhotos[i].obInPhoto == ObjectType.GREEN)
                 {
                     curDebugPlane.GetComponent<MeshRenderer>().material = greenMat;
+                }
+                else if (activePhotos[i].obInPhoto == ObjectType.BLUE)
+                {
+                    curDebugPlane.GetComponent<MeshRenderer>().material = blueMat;
                 }
             }
             else
@@ -192,7 +233,11 @@ public class PhotoScript : MonoBehaviour
                 mat.mainTexture = null;
             }
         }
-    }
+/*        if (DEBUG_MODE)
+        {
+            photosPlanes[0].GetComponent<MeshRenderer>().material.mainTexture = blitTexture;
+        }
+*/    }
     private void OnDestroy()
     {
         for (int i = 0; i < MAX_PHOTOS; i++)
