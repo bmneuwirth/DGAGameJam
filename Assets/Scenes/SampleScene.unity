@@ -241,7 +241,7 @@ GameObject:
   - component: {fileID: 472201797}
   - component: {fileID: 472201796}
   - component: {fileID: 472201795}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -535,9 +535,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DEBUG_CENTER: {x: 0, y: 2, z: 5}
   planePrefab: {fileID: 6933896777196071886, guid: bd980d34b4797ee44afe8ceaa5b6791a, type: 3}
-  photos: []
-  photosPlanes: []
-  curPhotoIndex: 0
+  greenMat: {fileID: 2100000, guid: a2c18119a2b68fe4ea9e7b0e64f17397, type: 2}
+  redMat: {fileID: 2100000, guid: 6f445a1537b43a94490000e9dcedd6eb, type: 2}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
