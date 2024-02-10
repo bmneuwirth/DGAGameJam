@@ -70,7 +70,6 @@ public class PhotoScript : MonoBehaviour
     void Start()
     {
         layerMask = 0 | (1 << LayerMask.NameToLayer("SpecialObject"));
-        Debug.Log(layerMask);
         Camera.main.backgroundColor = Color.black;
 
         activePhotos = new List<Photo>();
