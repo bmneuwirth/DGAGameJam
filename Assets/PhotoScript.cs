@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using UnityEngine;
 using static UnityEditor.Experimental.GraphView.GraphView;
+using static UnityEngine.GraphicsBuffer;
 
 public enum ObjectType
 {
@@ -31,10 +32,15 @@ public class PhotoScript : MonoBehaviour
 {
     public const int MAX_PHOTOS = 20;
     public const bool DEBUG_MODE = true;
-    public const float DEBUG_SPEED = 0.01f;
+    public const float DEBUG_SPEED = 5f;
     public Vector3 DEBUG_CENTER;
     // How much of the area the object has to be of the photo to be a "good shot"
     public const float REQ_AREA = 0.02f;
+
+    public bool inCameraMode = false;
+    public float zoomMult = 0.5f;
+    public float defaultFov;
+    public float zoomSpeed = 10f; // Speed of zoom transition
 
     // Objects that are special and can be in photo
     public List<GameObject> targetObjects;
@@ -70,6 +76,7 @@ public class PhotoScript : MonoBehaviour
     void Start()
     {
         layerMask = 0 | (1 << LayerMask.NameToLayer("SpecialObject"));
+        defaultFov = Camera.main.fieldOfView;
         Camera.main.backgroundColor = Color.black;
 
         activePhotos = new List<Photo>();
@@ -112,10 +119,18 @@ public class PhotoScript : MonoBehaviour
             float zAxisValue = Input.GetAxis("Vertical");
             if (Camera.main != null)
             {
-                Camera.main.transform.Translate(new Vector3(xAxisValue * DEBUG_SPEED, 0.0f, zAxisValue * DEBUG_SPEED));
+                Camera.main.transform.Translate(new Vector3(xAxisValue * DEBUG_SPEED * Time.deltaTime, 0.0f, zAxisValue * DEBUG_SPEED * Time.deltaTime));
             }
         }
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(1))
+        {
+            inCameraMode = !inCameraMode;
+        }
+
+        float targetFOV = defaultFov * (inCameraMode ? zoomMult : 1);
+        Camera.main.fieldOfView = Mathf.Lerp(Camera.main.fieldOfView, targetFOV, zoomSpeed * Time.deltaTime);
+
+        if (Input.GetMouseButtonDown(0) && inCameraMode)
         {
             if (inactivePhotos.Count == 0)
             {
