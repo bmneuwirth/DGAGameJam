@@ -47,6 +47,6 @@ public class PlayerCrounch : MonoBehaviour
 
     private void AdjustCameraHeight()
     {
-        playerCamera.position = new Vector3(playerCamera.position.x, standingCameraHeight - (standingHeight - playerController.height), playerCamera.position.z);
+        playerCamera.localPosition.Set(playerCamera.localPosition.x, playerController.height, playerCamera.localPosition.z);
     }
 }
