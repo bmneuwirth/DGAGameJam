@@ -37,7 +37,7 @@ public class PhotoScript : MonoBehaviour
     public const float DEBUG_SPEED = 5f;
     public Vector3 DEBUG_CENTER;
     // How much of the area the object has to be of the photo to be a "good shot"
-    public const float REQ_AREA = 0.02f;
+    public const float REQ_AREA = 0.01f;
     public const float FLASH_TIME = 0.5f;
 
     public bool inCameraMode = false;
@@ -313,6 +313,7 @@ public class PhotoScript : MonoBehaviour
             Photo photoToDelete = activePhotos[i];
             activePhotos.RemoveAt(i);
             inactivePhotos.Push(photoToDelete);
+            photoToDelete.obInPhoto = ObjectType.NOTHING;
         }
     }
 }
