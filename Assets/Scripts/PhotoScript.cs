@@ -33,13 +33,11 @@ public class PhotoScript : MonoBehaviour
     public const float REQ_AREA = 0.005f;
     public const float FLASH_TIME = 0.5f;
 
-    public bool inCameraMode = false;
+    public new Camera camera;
+    private bool inCameraMode = false;
     public float zoomMult = 0.5f;
-    public float defaultFov;
+    public float defaultFov = 90.0f;
     public float zoomSpeed = 10f; // Speed of zoom transition
-
-    // Objects that are special and can be in photo
-    public List<GameObject> targetObjects;
 
     public GameObject planePrefab;
     private GameObject[] photosPlanes;
@@ -82,8 +80,8 @@ public class PhotoScript : MonoBehaviour
     void Start()
     {
         layerMask = 0 | (1 << LayerMask.NameToLayer("SpecialObject"));
-        defaultFov = Camera.main.fieldOfView;
-        Camera.main.backgroundColor = Color.black;
+        defaultFov = camera.fieldOfView;
+        camera.backgroundColor = Color.black;
         crosshair.enabled = false;
         flash.enabled = false;
 
@@ -209,11 +207,11 @@ public class PhotoScript : MonoBehaviour
                         // See which object it is
                         Vector3 screenPosOnRenderTexture = new Vector3(((latestNonBlack % blitTexture.width) - 0.5f) / (float)blitTexture.width, ((latestNonBlack / blitTexture.height) - 0.5f) / (float)blitTexture.height);
 
-                        float scale = (Camera.main.aspect - 1) / 2.0f;
-                        screenPosOnRenderTexture.x *= (Camera.main.aspect - 2 * scale) / Camera.main.aspect;
-                        screenPosOnRenderTexture.x += scale / Camera.main.aspect;
+                        float scale = (camera.aspect - 1) / 2.0f;
+                        screenPosOnRenderTexture.x *= (camera.aspect - 2 * scale) / camera.aspect;
+                        screenPosOnRenderTexture.x += scale / camera.aspect;
 
-                        Ray ray = Camera.main.ViewportPointToRay(screenPosOnRenderTexture);
+                        Ray ray = camera.ViewportPointToRay(screenPosOnRenderTexture);
                         RaycastHit hit;
                         if (Physics.Raycast(ray, out hit))
                         {
