@@ -177,8 +177,8 @@ public class PhotoScript : MonoBehaviour
                     Graphics.SetRenderTarget(null);
                     camera.SetTargetBuffers(inspectTexture.colorBuffer, depthTexture.depthBuffer);
                     camera.Render();
-                    Graphics.SetRenderTarget(null);
-
+/*                    Graphics.SetRenderTarget(null);
+*/
                     // Cleanup
                     camera.clearFlags = oldClearFlags;
                     camera.cullingMask = oldMask;
@@ -204,8 +204,6 @@ public class PhotoScript : MonoBehaviour
                         }
                     }
 
-                    Debug.Log(nonBlackPixels);
-                    Debug.Log(pixels[0]);
                     // Check against threshold
                     if (nonBlackPixels > REQ_AREA * blitTexture.width * blitTexture.height)
                     {
