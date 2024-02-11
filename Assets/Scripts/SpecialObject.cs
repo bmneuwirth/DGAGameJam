@@ -2,6 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum ObjectType
+{
+    NOTHING,
+    GREEN,
+    BLUE
+}
+
 public class SpecialObject : MonoBehaviour
 {
     public ObjectType obType;

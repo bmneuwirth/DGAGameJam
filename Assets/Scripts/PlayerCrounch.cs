@@ -9,8 +9,8 @@ public class PlayerCrounch : MonoBehaviour
     public Transform playerCamera;
     [SerializeField] private float crounchSpeed, standingHeight, crounchHeight;
     private bool isCrounching = false;
-    private float standingCameraHeight = 0.6f;
-
+/*    private float standingCameraHeight = 0.6f;
+*/
     private void Start()
     {
         playerController = GetComponent<CharacterController>();

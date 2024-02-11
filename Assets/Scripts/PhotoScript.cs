@@ -8,13 +8,6 @@ using static Unity.VisualScripting.Member;
 using static UnityEditor.Experimental.GraphView.GraphView;
 using static UnityEngine.GraphicsBuffer;
 
-public enum ObjectType
-{
-    NOTHING,
-    GREEN,
-    BLUE
-}
-
 public class Photo
 {
     public Photo(RenderTexture texture)
@@ -37,7 +30,7 @@ public class PhotoScript : MonoBehaviour
     public const float DEBUG_SPEED = 5f;
     public Vector3 DEBUG_CENTER;
     // How much of the area the object has to be of the photo to be a "good shot"
-    public const float REQ_AREA = 0.01f;
+    public const float REQ_AREA = 0.005f;
     public const float FLASH_TIME = 0.5f;
 
     public bool inCameraMode = false;
@@ -177,8 +170,8 @@ public class PhotoScript : MonoBehaviour
                     Graphics.SetRenderTarget(null);
                     camera.SetTargetBuffers(inspectTexture.colorBuffer, depthTexture.depthBuffer);
                     camera.Render();
-/*                    Graphics.SetRenderTarget(null);
-*/
+                    /*                    Graphics.SetRenderTarget(null);
+                    */
                     // Cleanup
                     camera.clearFlags = oldClearFlags;
                     camera.cullingMask = oldMask;
@@ -196,41 +189,45 @@ public class PhotoScript : MonoBehaviour
                     int nonBlackPixels = 0;
                     Color[] pixels = blitTexture2D.GetPixels();
                     Color compare = new Color(0, 0, 0, 0);
-                    foreach (Color pixel in pixels)
+
+                    // Right now, arbitrarily selects the subject of the photo if there are multiple special objects
+                    // By sampling depth buffer and picking closest non-black pixel here, could deterministicly pick the closest object as the subject
+                    int latestNonBlack = -1;
+                    for (int i = 0; i < pixels.Length; i++)
                     {
-                        if (pixel != compare)
+                        if (pixels[i] != compare)
                         {
                             nonBlackPixels++;
+                            latestNonBlack = i;
                         }
+
                     }
 
                     // Check against threshold
                     if (nonBlackPixels > REQ_AREA * blitTexture.width * blitTexture.height)
                     {
                         // See which object it is
-                        float minDist = float.MaxValue;
-                        ObjectType bestObType = ObjectType.NOTHING;
+                        Vector3 screenPosOnRenderTexture = new Vector3(((latestNonBlack % blitTexture.width) - 0.5f) / (float)blitTexture.width, ((latestNonBlack / blitTexture.height) - 0.5f) / (float)blitTexture.height);
 
-                        for (int i = 0; i < targetObjects.Count; i++)
+                        float scale = (Camera.main.aspect - 1) / 2.0f;
+                        screenPosOnRenderTexture.x *= (Camera.main.aspect - 2 * scale) / Camera.main.aspect;
+                        screenPosOnRenderTexture.x += scale / Camera.main.aspect;
+
+                        Ray ray = Camera.main.ViewportPointToRay(screenPosOnRenderTexture);
+                        RaycastHit hit;
+                        if (Physics.Raycast(ray, out hit))
                         {
-                            Vector3 viewPos = camera.WorldToViewportPoint(targetObjects[i].transform.position);
-                            
-                            // Check if closest object and in viewport
-                            if (viewPos.z > 0 && viewPos.z < minDist && viewPos.x > 0 && viewPos.x < 1 && viewPos.y > 0 && viewPos.y < 1)
+                            GameObject hitObject = hit.collider.gameObject;
+
+                            if (hitObject.GetComponent<SpecialObject>() != null)
                             {
-                                // Check if it's the thing we have in the photo (not occluded or something)
-                                int pixelX = (int)(viewPos.x * blitTexture2D.width);
-                                int pixelY = (int)(viewPos.y * blitTexture2D.height);
-
-                                if (blitTexture2D.GetPixel(pixelX, pixelY) != Color.black)
-                                {
-                                    bestObType = targetObjects[i].GetComponent<SpecialObject>().obType;
-                                    minDist = viewPos.z;
-                                }
+                                curPhoto.obInPhoto = hitObject.GetComponent<SpecialObject>().obType;
                             }
-
+                            else
+                            {
+                                Debug.Log("Could not find special object");
+                            }
                         }
-                        curPhoto.obInPhoto = bestObType;
                     }
                 }
                 else
@@ -240,7 +237,7 @@ public class PhotoScript : MonoBehaviour
 
             }
         }
-        
+
         // Flash logic
         if (flash.enabled)
         {
