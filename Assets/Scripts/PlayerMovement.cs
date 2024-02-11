@@ -55,14 +55,11 @@ public class PlayerMovement : MonoBehaviour
         {
             move.y -= gravity;
         }
-        Debug.Log(move);
         playerController.Move(move * Time.deltaTime);
 
         rotationX += -Input.GetAxis("Mouse Y") * lookSpeed;
         rotationX = Mathf.Clamp(rotationX, -lookXLimit, lookXLimit);
         playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, 0);
         transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
-
-        Debug.Log(playerController.isGrounded);
     }
 }

@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using UnityEngine;
+using UnityEngine.UI;
+using static Unity.VisualScripting.Member;
 using static UnityEditor.Experimental.GraphView.GraphView;
 using static UnityEngine.GraphicsBuffer;
 
@@ -36,6 +38,7 @@ public class PhotoScript : MonoBehaviour
     public Vector3 DEBUG_CENTER;
     // How much of the area the object has to be of the photo to be a "good shot"
     public const float REQ_AREA = 0.02f;
+    public const float FLASH_TIME = 0.5f;
 
     public bool inCameraMode = false;
     public float zoomMult = 0.5f;
@@ -57,6 +60,9 @@ public class PhotoScript : MonoBehaviour
     // We use this RenderTexture to detect if certain objects are in the photo
     private RenderTexture inspectTexture;
 
+    // Save the depth from the initial pass
+    private RenderTexture depthTexture;
+
     // We use this RenderTexture to blit to so we don't have to check so many pixels
     private RenderTexture blitTexture;
 
@@ -65,6 +71,13 @@ public class PhotoScript : MonoBehaviour
 
     // Layer for camera detection to render
     int layerMask;
+
+    // Crosshair UI for camera mode
+    public Image crosshair;
+
+    // Image flash for camera taken
+    public Image flash;
+    private float timeSinceFlash;
 
     // All the fields below are for debugging
     private GameObject[] debugPlanes;
@@ -78,14 +91,17 @@ public class PhotoScript : MonoBehaviour
         layerMask = 0 | (1 << LayerMask.NameToLayer("SpecialObject"));
         defaultFov = Camera.main.fieldOfView;
         Camera.main.backgroundColor = Color.black;
+        crosshair.enabled = false;
+        flash.enabled = false;
 
         activePhotos = new List<Photo>();
         inactivePhotos = new Stack<Photo>();
         photosPlanes = new GameObject[MAX_PHOTOS];
         debugPlanes = new GameObject[MAX_PHOTOS];
 
-        inspectTexture = new RenderTexture(512, 512, 16, RenderTextureFormat.ARGB32);
-        blitTexture = new RenderTexture(32, 32, 16, RenderTextureFormat.ARGB32);
+        inspectTexture = new RenderTexture(512, 512, 0, RenderTextureFormat.ARGB32);
+        depthTexture = new RenderTexture(512, 512, 32, RenderTextureFormat.Depth);
+        blitTexture = new RenderTexture(32, 32, 0, RenderTextureFormat.ARGB32);
         blitTexture2D = new Texture2D(32, 32, TextureFormat.ARGB32, false);
 
         for (int i = 0; i < MAX_PHOTOS; i++)
@@ -112,14 +128,18 @@ public class PhotoScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        // Toggle between zoomed in and zoomed out
         if (Input.GetMouseButtonDown(1))
         {
             inCameraMode = !inCameraMode;
+            crosshair.enabled = inCameraMode;
         }
 
+        // Logic for switching modes
         float targetFOV = defaultFov * (inCameraMode ? zoomMult : 1);
         Camera.main.fieldOfView = Mathf.Lerp(Camera.main.fieldOfView, targetFOV, zoomSpeed * Time.deltaTime);
 
+        // Taking photos
         if (Input.GetMouseButtonDown(0) && inCameraMode)
         {
             if (inactivePhotos.Count == 0)
@@ -129,23 +149,35 @@ public class PhotoScript : MonoBehaviour
             else
             {
                 Photo curPhoto = inactivePhotos.Pop();
+                // Make sure the photo exists
                 if (curPhoto.texture && curPhoto.texture.IsCreated())
                 {
+                    // Start the flash
+                    flash.enabled = true;
+                    timeSinceFlash = 0.0f;
 
+                    // Save old camera values
                     Camera camera = Camera.main;
                     RenderTexture prevTarget = camera.targetTexture;
-                    camera.targetTexture = curPhoto.texture;
-                    camera.Render();
-
-                    activePhotos.Add(curPhoto);
-
-                    // Do the checking for our various flags
                     int oldMask = camera.cullingMask;
                     CameraClearFlags oldClearFlags = camera.clearFlags;
-                    camera.clearFlags = CameraClearFlags.SolidColor;
-                    camera.cullingMask = layerMask;
-                    camera.targetTexture = inspectTexture;
+
+                    // Take picture
+                    camera.SetTargetBuffers(curPhoto.texture.colorBuffer, depthTexture.depthBuffer);
                     camera.Render();
+                    activePhotos.Add(curPhoto);
+
+                    // Prep camera for content testing pass
+                    camera.clearFlags = CameraClearFlags.Nothing;
+                    camera.cullingMask = layerMask;
+
+                    // Take other picture
+                    Graphics.SetRenderTarget(inspectTexture);
+                    GL.Clear(false, true, Color.clear); // Clear the color buffer for the initial 
+                    Graphics.SetRenderTarget(null);
+                    camera.SetTargetBuffers(inspectTexture.colorBuffer, depthTexture.depthBuffer);
+                    camera.Render();
+                    Graphics.SetRenderTarget(null);
 
                     // Cleanup
                     camera.clearFlags = oldClearFlags;
@@ -156,19 +188,24 @@ public class PhotoScript : MonoBehaviour
                     Graphics.Blit(inspectTexture, blitTexture);
                     RenderTexture.active = blitTexture;
                     blitTexture2D.ReadPixels(new Rect(0, 0, blitTexture.width, blitTexture.height), 0, 0);
-                    blitTexture2D.Apply();
+
+                    // Cleanup
+                    RenderTexture.active = null; // Reset active RenderTexture
 
                     // Count non-black pixels
                     int nonBlackPixels = 0;
                     Color[] pixels = blitTexture2D.GetPixels();
+                    Color compare = new Color(0, 0, 0, 0);
                     foreach (Color pixel in pixels)
                     {
-                        if (pixel != Color.black)
+                        if (pixel != compare)
                         {
                             nonBlackPixels++;
                         }
                     }
 
+                    Debug.Log(nonBlackPixels);
+                    Debug.Log(pixels[0]);
                     // Check against threshold
                     if (nonBlackPixels > REQ_AREA * blitTexture.width * blitTexture.height)
                     {
@@ -197,9 +234,6 @@ public class PhotoScript : MonoBehaviour
                         }
                         curPhoto.obInPhoto = bestObType;
                     }
-
-                    // Cleanup
-                    RenderTexture.active = null; // Reset active RenderTexture
                 }
                 else
                 {
@@ -208,12 +242,25 @@ public class PhotoScript : MonoBehaviour
 
             }
         }
+        
+        // Flash logic
+        if (flash.enabled)
+        {
+            flash.color = new Color(1, 1, 1, Mathf.Lerp(1, 0, timeSinceFlash / FLASH_TIME));
+        }
+        timeSinceFlash += Time.deltaTime;
+        if (timeSinceFlash >= FLASH_TIME)
+        {
+            flash.enabled = false;
+        }
+
+        // Temp way to delete
         if (DEBUG_MODE && Input.GetKeyDown(KeyCode.R))
         {
             DeletePhoto(0);
         }
 
-        // Update the photos (this only needs to happen if they are being displayed)
+        // Code for displaying photos
         for (int i = 0; i < MAX_PHOTOS; i++)
         {
             GameObject curPlane = photosPlanes[i];
@@ -237,11 +284,7 @@ public class PhotoScript : MonoBehaviour
                 mat.mainTexture = null;
             }
         }
-/*        if (DEBUG_MODE)
-        {
-            photosPlanes[0].GetComponent<MeshRenderer>().material.mainTexture = blitTexture;
-        }
-*/    }
+    }
     private void OnDestroy()
     {
         for (int i = 0; i < MAX_PHOTOS; i++)
