@@ -45,14 +45,13 @@ public class Ending : MonoBehaviour
 
         if (hasGreen)
         {
-            Debug.Log("You win!");
+            Application.Quit();
         }
         else
         {
-            Debug.Log("Not enough evidence");
+            SceneManager.LoadScene("Set with interior");
         }
 
-        SceneManager.LoadScene("Set with interior");
 
     }
 }
