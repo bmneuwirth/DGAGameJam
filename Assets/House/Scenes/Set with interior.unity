@@ -11002,6 +11002,36 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 486974, guid: 27035791989bb9f4e8760164d99dac5b, type: 3}
   m_PrefabInstance: {fileID: 293650194}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &294675253 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 111794, guid: 24affe15063cc9045b09787f8e1eee56, type: 3}
+  m_PrefabInstance: {fileID: 1240179300}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &294675260 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6044882810502790352, guid: 24affe15063cc9045b09787f8e1eee56, type: 3}
+  m_PrefabInstance: {fileID: 1240179300}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 294675253}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 820899474fce48440ad2be23b786b193, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &294675261
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 294675253}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2c1a06d55270c42498289bbdff358357, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  door: {fileID: 294675260}
+  photoScript: {fileID: 1067850775}
 --- !u!1001 &298115499
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -39880,6 +39910,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7304f0fdc9674c419c59bc17467f92f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ui: {fileID: 1463008198}
   camera: {fileID: 1067850774}
   zoomMult: 0.5
   defaultFov: 90
@@ -46492,7 +46523,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 111794, guid: 24affe15063cc9045b09787f8e1eee56, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 294675261}
   m_SourcePrefab: {fileID: 100100000, guid: 24affe15063cc9045b09787f8e1eee56, type: 3}
 --- !u!4 &1240179301 stripped
 Transform:
@@ -55805,6 +55839,8 @@ MonoBehaviour:
   photoScript: {fileID: 1067850775}
   canvas: {fileID: 1463008196}
   blackBackground: {fileID: 419247706}
+  controller: {fileID: 1839408574}
+  trashBin: {fileID: 5034644380503309270, guid: ada634303aecb5643ba442a579c9751e, type: 3}
   gridWidth: 4
   gridHeight: 3
   cellWidth: 200
@@ -56253,6 +56289,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2872956008676513800, guid: 47375864ba6ea814f8289d2abbdf5f4b, type: 3}
+      propertyPath: m_AdditionalShaderChannelsFlag
+      value: 25
+      objectReference: {fileID: 0}
     - target: {fileID: 6787436889576251276, guid: 47375864ba6ea814f8289d2abbdf5f4b, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -69349,6 +69389,8 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 4668524a5ab640d40a5a71b495a77c87, type: 3}
   m_JumpSound: {fileID: 8300000, guid: 4668524a5ab640d40a5a71b495a77c87, type: 3}
   m_LandSound: {fileID: 8300000, guid: 4668524a5ab640d40a5a71b495a77c87, type: 3}
+  menu: 0
+  end: 0
 --- !u!143 &1839408575
 CharacterController:
   m_ObjectHideFlags: 0

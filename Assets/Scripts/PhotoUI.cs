@@ -1,9 +1,11 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.UI;
+using UnityStandardAssets.Characters.FirstPerson;
 using Image = UnityEngine.UI.Image;
 
 public class PhotoUI : MonoBehaviour
@@ -11,6 +13,9 @@ public class PhotoUI : MonoBehaviour
     public PhotoScript photoScript;
     public Canvas canvas;
     public Image blackBackground;
+
+    public FirstPersonController controller;
+    public GameObject trashBin;
 
     private GameObject[] images;
 
@@ -20,7 +25,7 @@ public class PhotoUI : MonoBehaviour
     public int gridHeight = 3;
     public float cellWidth;
     public float cellHeight;
-    public float spacing = 20f;
+    public float spacing = 10f;
     public RectOffset padding;
 
     // Start is called before the first frame update
@@ -39,6 +44,7 @@ public class PhotoUI : MonoBehaviour
     void Update()
     {
         List<Photo> activePhotos = photoScript.activePhotos;
+        controller.menu = menuMode; 
 
         if (Input.GetKeyDown(KeyCode.E))
         {
@@ -72,6 +78,11 @@ public class PhotoUI : MonoBehaviour
 
         }
 
+    }
+
+    public bool IsMenuMode()
+    {
+        return menuMode;
     }
 
     void GenerateGrid()
@@ -125,6 +136,20 @@ public class PhotoUI : MonoBehaviour
                 float posX = (cellWidth + spacing) * x;
                 float posY = (cellHeight + spacing) * y;
                 rect.anchoredPosition = new Vector2(posX, -posY);
+
+                GameObject trashBinButton = Instantiate(trashBin, rect.transform, false);
+                trashBinButton.name = i.ToString();
+                trashBinButton.GetComponent<Button>().onClick.AddListener(() => photoScript.DeletePhoto(Convert.ToInt32(trashBinButton.name)));
+
+                LayoutElement layoutElement = trashBinButton.AddComponent<LayoutElement>();
+                layoutElement.ignoreLayout = true;
+
+                RectTransform btnRect = trashBinButton.GetComponent<RectTransform>();
+                btnRect.sizeDelta = new Vector2(cellWidth / 2, cellHeight / 2);
+                btnRect.anchorMin = new Vector2(1, 1);
+                btnRect.anchorMax = new Vector2(1, 1);
+                btnRect.pivot = new Vector2(1, 1);
+                btnRect.anchoredPosition = new Vector2(-5, -5); // Adjust for padding from corner
 
                 i++;
             }

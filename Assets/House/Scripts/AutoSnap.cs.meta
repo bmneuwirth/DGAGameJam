@@ -1,6 +1,11 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/House/Scripts/AutoSnap.cs.meta
 guid: 6e62262c95f9a0a4cac2f11531b4049a
 timeCreated: 1464246727
+========
+guid: 820899474fce48440ad2be23b786b193
+timeCreated: 1474557487
+>>>>>>>> assets:Assets/House/Scripts/Door.cs.meta
 licenseType: Store
 MonoImporter:
   serializedVersion: 2

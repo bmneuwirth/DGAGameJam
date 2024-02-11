@@ -32,7 +32,8 @@ public class PhotoScript : MonoBehaviour
     public const float REQ_AREA = 0.005f;
     public const float FLASH_TIME = 0.5f;
 
-    public new Camera camera;
+    public PhotoUI ui;
+    public Camera camera;
     private bool inCameraMode = false;
     public float zoomMult = 0.5f;
     public float defaultFov = 90.0f;
@@ -105,16 +106,34 @@ public class PhotoScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
+        // Temp way to delete
+        if (DEBUG_MODE && Input.GetKeyDown(KeyCode.R))
+        {
+            DeletePhoto(0);
+        }
+
+        if (ui.IsMenuMode())
+        {
+            inCameraMode = false;
+            crosshair.enabled = false;
+        }
+
+        // Logic for switching modes
+        float targetFOV = defaultFov * (inCameraMode ? zoomMult : 1);
+        Camera.main.fieldOfView = Mathf.Lerp(Camera.main.fieldOfView, targetFOV, zoomSpeed * Time.deltaTime);
+
+        if (ui.IsMenuMode())
+        {
+            return;
+        }
+
         // Toggle between zoomed in and zoomed out
         if (Input.GetMouseButtonDown(1))
         {
             inCameraMode = !inCameraMode;
             crosshair.enabled = inCameraMode;
         }
-
-        // Logic for switching modes
-        float targetFOV = defaultFov * (inCameraMode ? zoomMult : 1);
-        Camera.main.fieldOfView = Mathf.Lerp(Camera.main.fieldOfView, targetFOV, zoomSpeed * Time.deltaTime);
 
         // Taking photos
         if (Input.GetMouseButtonDown(0) && inCameraMode)
@@ -231,12 +250,6 @@ public class PhotoScript : MonoBehaviour
         if (timeSinceFlash >= FLASH_TIME)
         {
             flash.enabled = false;
-        }
-
-        // Temp way to delete
-        if (DEBUG_MODE && Input.GetKeyDown(KeyCode.R))
-        {
-            DeletePhoto(0);
         }
 
         // Code for displaying photos

@@ -45,7 +45,7 @@ GameObject:
   - component: {fileID: 2382144}
   - component: {fileID: 6554264}
   - component: {fileID: 11172214}
-  - component: {fileID: 6453149454035221889}
+  - component: {fileID: 3247497625420464048}
   m_Layer: 0
   m_Name: Door_Inside
   m_TagString: Door
@@ -156,7 +156,7 @@ Animation:
   m_PlayAutomatically: 0
   m_AnimatePhysics: 1
   m_CullingType: 0
---- !u!114 &6453149454035221889
+--- !u!114 &3247497625420464048
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -165,6 +165,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 178878}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6a2439efb53129241acbcd70300e5ab9, type: 3}
+  m_Script: {fileID: 11500000, guid: 820899474fce48440ad2be23b786b193, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
