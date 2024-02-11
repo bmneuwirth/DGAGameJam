@@ -51,7 +51,7 @@ public class IntroDialouge : MonoBehaviour
         fadeScreen.Fade();
 
         yield return new WaitForSeconds(_delay);
-        SceneManager.LoadScene("Game");
+        SceneManager.LoadScene("Set with interior");
 
     }
 }
