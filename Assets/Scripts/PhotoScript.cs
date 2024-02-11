@@ -6,13 +6,16 @@ using UnityEngine;
 using UnityEngine.UI;
 public class Photo
 {
-    public Photo(RenderTexture texture)
+    public Photo(RenderTexture texture, Material mat)
     {
         this.texture = texture;
+        this.material = mat;
         this.obInPhoto = ObjectType.NOTHING;
     }
 
     public RenderTexture texture { get; }
+
+    public Material material { get; }
 
     public ObjectType obInPhoto { get; set; }
 
@@ -21,10 +24,10 @@ public class Photo
 
 public class PhotoScript : MonoBehaviour
 {
-    public const int MAX_PHOTOS = 20;
+    public const int MAX_PHOTOS = 12;
     public const bool DEBUG_MODE = true;
     public const float DEBUG_SPEED = 5f;
-    public Vector3 DEBUG_CENTER;
+
     // How much of the area the object has to be of the photo to be a "good shot"
     public const float REQ_AREA = 0.005f;
     public const float FLASH_TIME = 0.5f;
@@ -34,9 +37,6 @@ public class PhotoScript : MonoBehaviour
     public float zoomMult = 0.5f;
     public float defaultFov = 90.0f;
     public float zoomSpeed = 10f; // Speed of zoom transition
-
-    public GameObject planePrefab;
-    private GameObject[] photosPlanes;
 
     // Active photos are a list we can remove things from
     public List<Photo> activePhotos;
@@ -66,12 +66,6 @@ public class PhotoScript : MonoBehaviour
     public Image flash;
     private float timeSinceFlash;
 
-    // All the fields below are for debugging
-    private GameObject[] debugPlanes;
-    public Material greenMat;
-    public Material blueMat;
-    public Material redMat;
-
     // Start is called before the first frame update
     void Start()
     {
@@ -83,8 +77,6 @@ public class PhotoScript : MonoBehaviour
 
         activePhotos = new List<Photo>();
         inactivePhotos = new Stack<Photo>();
-        photosPlanes = new GameObject[MAX_PHOTOS];
-        debugPlanes = new GameObject[MAX_PHOTOS];
 
         inspectTexture = new RenderTexture(512, 512, 0, RenderTextureFormat.ARGB32);
         depthTexture = new RenderTexture(512, 512, 32, RenderTextureFormat.Depth);
@@ -94,21 +86,19 @@ public class PhotoScript : MonoBehaviour
         for (int i = 0; i < MAX_PHOTOS; i++)
         {
             RenderTexture rt = new RenderTexture(512, 512, 16, RenderTextureFormat.ARGB32);
+            Material mat = new Material(Shader.Find("Unlit/Texture"));
+            if (mat == null)
+            {
+                Debug.Log("Error creating material");
+            }
             rt.Create();
-            Photo photo = new Photo(rt);
+            Photo photo = new Photo(rt, mat);
             inactivePhotos.Push(photo);
+        }
 
-            Vector3 planePos = DEBUG_CENTER;
-            planePos.x = (i - (MAX_PHOTOS / 2)) * 2;
-            GameObject photoPlane = Instantiate(planePrefab, planePos, Quaternion.Euler(90, -90, 90));
-            photosPlanes[i] = photoPlane;
-
-            planePos.y += 2;
-            GameObject debugPlane = Instantiate(planePrefab, planePos, Quaternion.Euler(90, -90, 90));
-            debugPlanes[i] = debugPlane;
-
-            Material planeMaterial = new Material(Shader.Find("Standard"));
-            photoPlane.GetComponent<MeshRenderer>().material = planeMaterial;
+        if (DEBUG_MODE)
+        {
+            Debug.Log("PhotoScript started");
         }
     }
 
@@ -250,28 +240,9 @@ public class PhotoScript : MonoBehaviour
         }
 
         // Code for displaying photos
-        for (int i = 0; i < MAX_PHOTOS; i++)
+        for (int i = 0; i < activePhotos.Count; i++)
         {
-            GameObject curPlane = photosPlanes[i];
-            GameObject curDebugPlane = debugPlanes[i];
-            Material mat = curPlane.GetComponent<MeshRenderer>().material;
-            curDebugPlane.GetComponent<MeshRenderer>().material = redMat;
-            if (activePhotos.Count > i)
-            {
-                mat.mainTexture = activePhotos[i].texture;
-                if (activePhotos[i].obInPhoto == ObjectType.GREEN)
-                {
-                    curDebugPlane.GetComponent<MeshRenderer>().material = greenMat;
-                }
-                else if (activePhotos[i].obInPhoto == ObjectType.BLUE)
-                {
-                    curDebugPlane.GetComponent<MeshRenderer>().material = blueMat;
-                }
-            }
-            else
-            {
-                mat.mainTexture = null;
-            }
+            activePhotos[i].material.mainTexture = activePhotos[i].texture;
         }
     }
     private void OnDestroy()
@@ -305,6 +276,7 @@ public class PhotoScript : MonoBehaviour
             activePhotos.RemoveAt(i);
             inactivePhotos.Push(photoToDelete);
             photoToDelete.obInPhoto = ObjectType.NOTHING;
+            photoToDelete.material.mainTexture = null;
         }
     }
 }
