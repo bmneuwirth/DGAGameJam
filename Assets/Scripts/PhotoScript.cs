@@ -121,7 +121,10 @@ public class PhotoScript : MonoBehaviour
 
         // Logic for switching modes
         float targetFOV = defaultFov * (inCameraMode ? zoomMult : 1);
-        Camera.main.fieldOfView = Mathf.Lerp(Camera.main.fieldOfView, targetFOV, zoomSpeed * Time.deltaTime);
+        if (Camera.main)
+        {
+            Camera.main.fieldOfView = Mathf.Lerp(Camera.main.fieldOfView, targetFOV, zoomSpeed * Time.deltaTime);
+        }
 
         if (ui.IsMenuMode())
         {

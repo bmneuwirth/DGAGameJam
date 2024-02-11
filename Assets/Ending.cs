@@ -7,6 +7,8 @@ public class Ending : MonoBehaviour
 
     public Door door;
     public PhotoScript photoScript;
+    public Camera endingCam;
+    public Camera playerCam;
 
     // Start is called before the first frame update
     void Start()
@@ -19,27 +21,38 @@ public class Ending : MonoBehaviour
     {
         if (door.GetOpened())
         {
-            List<Photo> activePhotos = photoScript.activePhotos;
-            bool hasGreen = false;
-
-            for (int i = 0; i < activePhotos.Count; i++)
-            {
-                if (activePhotos[i].obInPhoto == ObjectType.GREEN)
-                {
-                    hasGreen = true;
-                }
-            }
-
-            if (hasGreen)
-            {
-                Debug.Log("You win!");
-            }
-            else
-            {
-                Debug.Log("Not enough evidence");
-            }
-
-            SceneManager.LoadScene("Set with interior");
+            StartCoroutine(TheEnd());
         }
+    }
+
+    public IEnumerator TheEnd()
+    {
+        List<Photo> activePhotos = photoScript.activePhotos;
+        bool hasGreen = false;
+
+        for (int i = 0; i < activePhotos.Count; i++)
+        {
+            if (activePhotos[i].obInPhoto == ObjectType.GREEN)
+            {
+                hasGreen = true;
+            }
+        }
+
+        playerCam.enabled = false;
+        endingCam.enabled = true;
+
+        yield return new WaitForSeconds(2);
+
+        if (hasGreen)
+        {
+            Debug.Log("You win!");
+        }
+        else
+        {
+            Debug.Log("Not enough evidence");
+        }
+
+        SceneManager.LoadScene("Set with interior");
+
     }
 }
