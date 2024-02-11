@@ -4,10 +4,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using UnityEngine;
 using UnityEngine.UI;
-using static Unity.VisualScripting.Member;
-using static UnityEditor.Experimental.GraphView.GraphView;
-using static UnityEngine.GraphicsBuffer;
-
 public class Photo
 {
     public Photo(RenderTexture texture)
